@@ -1,0 +1,40 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Book {
+  id            String    @id @default(cuid())
+  openLibraryId String    @unique
+  title         String
+  author        String
+  coverUrl      String?
+  description   String?
+  publishYear   Int?
+  pageCount     Int?
+  genres        String    @default("[]") // JSON array stored as string
+  status        String    @default("want_to_read") // want_to_read | reading | finished
+  rating        Int?      // 1-5
+  isFavorite    Boolean   @default(false)
+  notes         String?
+  currentPage   Int?
+  startedAt     DateTime?
+  finishedAt    DateTime?
+  addedAt       DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  chatMessages  ChatMessage[]
+}
+
+model ChatMessage {
+  id        String   @id @default(cuid())
+  bookId    String
+  book      Book     @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  role      String   // user | assistant
+  content   String
+  pageContext Int?   // what page user was on when they sent this
+  createdAt DateTime @default(now())
+}

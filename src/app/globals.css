@@ -1,0 +1,76 @@
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Lato:wght@300;400;700&display=swap');
+
+:root {
+  --bg-deep:       #120c06;
+  --bg-card:       #1e1208;
+  --bg-elevated:   #2a1a0a;
+  --bg-hover:      #351f0d;
+  --border:        #4a2e12;
+  --border-light:  #3a2210;
+  --amber:         #c8813a;
+  --amber-light:   #e0a355;
+  --amber-glow:    #f0b96a;
+  --cream:         #f2dfc0;
+  --cream-muted:   #c9b08a;
+  --cream-faint:   #7a6040;
+  --text-primary:  #f2dfc0;
+  --text-secondary:#c9b08a;
+  --text-muted:    #7a6040;
+  --green:         #6b9e6b;
+  --red:           #c46b4a;
+}
+
+@theme inline {
+  --color-bg-deep:      var(--bg-deep);
+  --color-bg-card:      var(--bg-card);
+  --color-bg-elevated:  var(--bg-elevated);
+  --color-bg-hover:     var(--bg-hover);
+  --color-border:       var(--border);
+  --color-border-light: var(--border-light);
+  --color-amber:        var(--amber);
+  --color-amber-light:  var(--amber-light);
+  --color-amber-glow:   var(--amber-glow);
+  --color-cream:        var(--cream);
+  --color-cream-muted:  var(--cream-muted);
+  --color-cream-faint:  var(--cream-faint);
+  --color-green:        var(--green);
+  --color-red:          var(--red);
+  --font-serif: 'Playfair Display', Georgia, serif;
+  --font-sans:  'Lato', system-ui, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background-color: var(--bg-deep);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-deep); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--amber); }
+
+/* Ember glow animation for accents */
+@keyframes ember-pulse {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
+}
+
+.ember { animation: ember-pulse 3s ease-in-out infinite; }
+
+/* Fade in */
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.fade-in { animation: fade-in 0.35s ease-out forwards; }
+
+/* Star rating */
+.star { transition: color 0.15s; cursor: pointer; }

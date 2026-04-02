@@ -41,9 +41,19 @@ export default async function BookPage({ params }: { params: Promise<{ id: strin
           </h1>
           <p className="text-lg mb-3" style={{ color: "var(--text-secondary)" }}>{book.author}</p>
 
-          <div className="flex gap-4 text-sm mb-4" style={{ color: "var(--text-muted)" }}>
+          <div className="flex gap-4 text-sm mb-4 flex-wrap" style={{ color: "var(--text-muted)" }}>
             {book.publishYear && <span>{book.publishYear}</span>}
             {book.pageCount   && <span>{book.pageCount} pages</span>}
+            {book.startedAt   && (
+              <span>
+                Started {new Date(book.startedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
+              </span>
+            )}
+            {book.finishedAt  && (
+              <span style={{ color: "var(--green)" }}>
+                Finished {new Date(book.finishedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
+              </span>
+            )}
           </div>
 
           {genres.length > 0 && (
@@ -61,7 +71,7 @@ export default async function BookPage({ params }: { params: Promise<{ id: strin
           )}
 
           {book.description && (
-            <p className="text-sm leading-relaxed" style={{ color: "var(--text-secondary)" }}>
+            <p className="text-sm leading-relaxed line-clamp-4" style={{ color: "var(--text-secondary)" }}>
               {book.description}
             </p>
           )}

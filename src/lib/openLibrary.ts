@@ -44,3 +44,19 @@ export async function searchBooks(query: string, limit = 12): Promise<OLBook[]> 
   const data = await res.json();
   return (data.docs as OLSearchResult[]).map(mapOLResult);
 }
+
+export async function fetchBookDescription(workId: string): Promise<string | null> {
+  try {
+    const res = await fetch(`https://openlibrary.org/works/${workId}.json`, {
+      next: { revalidate: 86400 },
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    const desc = data.description;
+    if (!desc) return null;
+    // description can be a string or { type, value }
+    return typeof desc === "string" ? desc : (desc.value ?? null);
+  } catch {
+    return null;
+  }
+}

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { OLBook } from "@/lib/openLibrary";
+import { OLBook, fetchBookDescription } from "@/lib/openLibrary";
 
 export async function GET() {
   const books = await db.book.findMany({ orderBy: { addedAt: "desc" } });
@@ -15,13 +15,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(existing);
   }
 
+  // Fetch full description from Open Library works API
+  const description = await fetchBookDescription(book.id);
+
   const created = await db.book.create({
     data: {
       openLibraryId: book.id,
       title:         book.title,
       author:        book.author,
       coverUrl:      book.coverUrl,
-      description:   book.description,
+      description:   description ?? book.description,
       publishYear:   book.publishYear,
       pageCount:     book.pageCount,
       genres:        JSON.stringify(book.genres),

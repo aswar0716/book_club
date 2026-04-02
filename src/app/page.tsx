@@ -15,16 +15,22 @@ export default async function ShelfPage() {
       {/* Header */}
       <div className="mb-10">
         <h2
-          className="text-4xl mb-2"
+          className="text-4xl mb-3"
           style={{ fontFamily: "var(--font-serif)", color: "var(--cream)" }}
         >
           My Shelf
         </h2>
-        <p style={{ color: "var(--text-muted)" }}>
-          {books.length === 0
-            ? "Your shelf is empty — find your first book to get started."
-            : `${books.length} book${books.length !== 1 ? "s" : ""} in your collection`}
-        </p>
+
+        {books.length > 0 ? (
+          <div className="flex gap-6 flex-wrap">
+            <Stat value={books.length}    label="total"    />
+            <Stat value={reading.length}  label="reading"  color="var(--amber)"  />
+            <Stat value={finished.length} label="finished" color="var(--green)"  />
+            <Stat value={wantTo.length}   label="want to read" />
+          </div>
+        ) : (
+          <p style={{ color: "var(--text-muted)" }}>Your shelf is empty — find your first book to get started.</p>
+        )}
       </div>
 
       {books.length === 0 && (
@@ -73,6 +79,17 @@ export default async function ShelfPage() {
   );
 }
 
+function Stat({ value, label, color }: { value: number; label: string; color?: string }) {
+  return (
+    <div className="flex items-baseline gap-1.5">
+      <span className="text-2xl font-bold" style={{ fontFamily: "var(--font-serif)", color: color ?? "var(--cream)" }}>
+        {value}
+      </span>
+      <span className="text-sm" style={{ color: "var(--text-muted)" }}>{label}</span>
+    </div>
+  );
+}
+
 function Section({ title, icon, children }: { title: string; icon: string; children: React.ReactNode }) {
   return (
     <div className="mb-12">
@@ -101,6 +118,8 @@ function Grid({ books }: { books: BookModel[] }) {
           status={book.status}
           isFavorite={book.isFavorite}
           genres={JSON.parse(book.genres)}
+          currentPage={book.currentPage}
+          pageCount={book.pageCount}
         />
       ))}
     </div>

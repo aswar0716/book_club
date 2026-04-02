@@ -12,6 +12,8 @@ interface BookCardProps {
   status: string;
   isFavorite: boolean;
   genres: string[];
+  currentPage?: number | null;
+  pageCount?: number | null;
 }
 
 const statusLabel: Record<string, string> = {
@@ -26,7 +28,13 @@ const statusColor: Record<string, string> = {
   finished: "var(--green)",
 };
 
-export default function BookCard({ id, title, author, coverUrl, rating, status, isFavorite, genres }: BookCardProps) {
+export default function BookCard({
+  id, title, author, coverUrl, rating, status, isFavorite, currentPage, pageCount,
+}: BookCardProps) {
+  const progress = status === "reading" && currentPage && pageCount
+    ? Math.min(100, Math.round((currentPage / pageCount) * 100))
+    : null;
+
   return (
     <Link href={`/books/${id}`} className="group block">
       <div
@@ -63,6 +71,27 @@ export default function BookCard({ id, title, author, coverUrl, rating, status, 
               style={{ background: "var(--bg-deep)", color: "var(--amber-glow)" }}
             >
               ♥
+            </div>
+          )}
+          {/* Progress overlay for reading books */}
+          {progress !== null && (
+            <div className="absolute bottom-0 left-0 right-0">
+              <div style={{ background: "rgba(18,12,6,0.75)", padding: "4px 8px 6px" }}>
+                <div className="flex justify-between items-center mb-1">
+                  <span className="text-xs" style={{ color: "var(--amber-light)", fontSize: "10px" }}>
+                    p.{currentPage}
+                  </span>
+                  <span className="text-xs" style={{ color: "var(--amber-light)", fontSize: "10px" }}>
+                    {progress}%
+                  </span>
+                </div>
+                <div className="w-full rounded-full overflow-hidden" style={{ height: "3px", background: "var(--border)" }}>
+                  <div
+                    className="h-full rounded-full transition-all"
+                    style={{ width: `${progress}%`, background: "var(--amber)" }}
+                  />
+                </div>
+              </div>
             </div>
           )}
         </div>

@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
 import { BookModel } from "@/generated/prisma/models/Book";
-import BookCard from "@/components/BookCard";
+import GenreFilter from "@/components/GenreFilter";
 import Link from "next/link";
 
 export default async function ShelfPage() {
@@ -9,6 +9,16 @@ export default async function ShelfPage() {
   const reading  = books.filter((b: BookModel) => b.status === "reading");
   const wantTo   = books.filter((b: BookModel) => b.status === "want_to_read");
   const finished = books.filter((b: BookModel) => b.status === "finished");
+
+  // Collect unique genres across all books
+  const allGenres = Array.from(
+    new Set(
+      books.flatMap((b: BookModel) => {
+        try { return JSON.parse(b.genres) as string[]; }
+        catch { return []; }
+      })
+    )
+  ).sort() as string[];
 
   return (
     <div className="p-8 max-w-6xl mx-auto fade-in">
@@ -23,9 +33,9 @@ export default async function ShelfPage() {
 
         {books.length > 0 ? (
           <div className="flex gap-6 flex-wrap">
-            <Stat value={books.length}    label="total"    />
-            <Stat value={reading.length}  label="reading"  color="var(--amber)"  />
-            <Stat value={finished.length} label="finished" color="var(--green)"  />
+            <Stat value={books.length}    label="total" />
+            <Stat value={reading.length}  label="reading"      color="var(--amber)" />
+            <Stat value={finished.length} label="finished"     color="var(--green)" />
             <Stat value={wantTo.length}   label="want to read" />
           </div>
         ) : (
@@ -60,19 +70,19 @@ export default async function ShelfPage() {
 
       {reading.length > 0 && (
         <Section title="Currently Reading" icon="☕">
-          <Grid books={reading} />
+          <GenreFilter books={reading} allGenres={[]} />
         </Section>
       )}
 
       {wantTo.length > 0 && (
         <Section title="Want to Read" icon="📌">
-          <Grid books={wantTo} />
+          <GenreFilter books={wantTo} allGenres={[]} />
         </Section>
       )}
 
       {finished.length > 0 && (
         <Section title="Finished" icon="✓">
-          <Grid books={finished} />
+          <GenreFilter books={finished} allGenres={allGenres} />
         </Section>
       )}
     </div>
@@ -100,28 +110,6 @@ function Section({ title, icon, children }: { title: string; icon: string; child
         <span>{icon}</span> {title}
       </h3>
       {children}
-    </div>
-  );
-}
-
-function Grid({ books }: { books: BookModel[] }) {
-  return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-      {books.map((book: BookModel) => (
-        <BookCard
-          key={book.id}
-          id={book.id}
-          title={book.title}
-          author={book.author}
-          coverUrl={book.coverUrl}
-          rating={book.rating}
-          status={book.status}
-          isFavorite={book.isFavorite}
-          genres={JSON.parse(book.genres)}
-          currentPage={book.currentPage}
-          pageCount={book.pageCount}
-        />
-      ))}
     </div>
   );
 }

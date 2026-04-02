@@ -1,5 +1,6 @@
 import { db } from "@/lib/db";
-import BookCard from "@/components/BookCard";
+import GenreFilter from "@/components/GenreFilter";
+import { BookModel } from "@/generated/prisma/models/Book";
 import Link from "next/link";
 
 export default async function ReadingPage() {
@@ -21,20 +22,14 @@ export default async function ReadingPage() {
         <div className="rounded-2xl p-12 text-center" style={{ background: "var(--bg-card)", border: "1px solid var(--border-light)" }}>
           <div className="text-4xl mb-4">☕</div>
           <p className="mb-5" style={{ color: "var(--text-secondary)", fontFamily: "var(--font-serif)" }}>
-            The kettle's on. Pick a book.
+            The kettle&apos;s on. Pick a book.
           </p>
           <Link href="/search" className="inline-block px-6 py-3 rounded-lg text-sm font-semibold" style={{ background: "var(--amber)", color: "var(--bg-deep)" }}>
             Find a book
           </Link>
         </div>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-          {books.map((book) => (
-            <BookCard key={book.id} id={book.id} title={book.title} author={book.author}
-              coverUrl={book.coverUrl} rating={book.rating} status={book.status}
-              isFavorite={book.isFavorite} genres={JSON.parse(book.genres)} />
-          ))}
-        </div>
+        <GenreFilter books={books as BookModel[]} allGenres={[]} />
       )}
     </div>
   );

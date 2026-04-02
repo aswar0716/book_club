@@ -4,11 +4,12 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const navItems = [
-  { href: "/",        label: "My Shelf",    icon: "📚" },
-  { href: "/search",  label: "Find Books",  icon: "🔍" },
-  { href: "/reading", label: "Reading Now", icon: "☕" },
-  { href: "/finished",label: "Finished",    icon: "✓"  },
-  { href: "/favourites", label: "Favourites", icon: "♥" },
+  { href: "/",              label: "My Shelf",      icon: "📚" },
+  { href: "/search",        label: "Find Books",    icon: "🔍" },
+  { href: "/reading",       label: "Reading Now",   icon: "☕" },
+  { href: "/want-to-read",  label: "Want to Read",  icon: "📌" },
+  { href: "/finished",      label: "Finished",      icon: "✓"  },
+  { href: "/favourites",    label: "Favourites",    icon: "♥"  },
 ];
 
 export default function Sidebar() {

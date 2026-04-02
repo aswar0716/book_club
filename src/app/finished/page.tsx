@@ -1,5 +1,6 @@
 import { db } from "@/lib/db";
-import BookCard from "@/components/BookCard";
+import GenreFilter from "@/components/GenreFilter";
+import { BookModel } from "@/generated/prisma/models/Book";
 import Link from "next/link";
 
 export default async function FinishedPage() {
@@ -7,6 +8,12 @@ export default async function FinishedPage() {
     where: { status: "finished" },
     orderBy: { finishedAt: "desc" },
   });
+
+  const allGenres = Array.from(
+    new Set(books.flatMap((b: BookModel) => {
+      try { return JSON.parse(b.genres) as string[]; } catch { return []; }
+    }))
+  ).sort() as string[];
 
   return (
     <div className="p-8 max-w-6xl mx-auto fade-in">
@@ -28,13 +35,7 @@ export default async function FinishedPage() {
           </Link>
         </div>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-          {books.map((book) => (
-            <BookCard key={book.id} id={book.id} title={book.title} author={book.author}
-              coverUrl={book.coverUrl} rating={book.rating} status={book.status}
-              isFavorite={book.isFavorite} genres={JSON.parse(book.genres)} />
-          ))}
-        </div>
+        <GenreFilter books={books as BookModel[]} allGenres={allGenres} />
       )}
     </div>
   );

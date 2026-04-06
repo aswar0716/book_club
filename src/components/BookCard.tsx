@@ -38,7 +38,7 @@ export default function BookCard({
   return (
     <Link href={`/books/${id}`} className="group block">
       <div
-        className="rounded-xl overflow-hidden transition-all duration-200 group-hover:scale-[1.02]"
+        className="book-card-wrap rounded-xl overflow-hidden transition-all duration-200 group-hover:scale-[1.02]"
         style={{
           background: "var(--bg-card)",
           border: "1px solid var(--border-light)",

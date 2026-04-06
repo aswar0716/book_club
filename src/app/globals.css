@@ -75,6 +75,35 @@ body {
 /* Star rating */
 .star { transition: color 0.15s; cursor: pointer; }
 
+/* Shimmer skeleton for loading states */
+@keyframes shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position:  400px 0; }
+}
+.skeleton {
+  background: linear-gradient(90deg, var(--bg-elevated) 25%, var(--bg-hover) 50%, var(--bg-elevated) 75%);
+  background-size: 800px 100%;
+  animation: shimmer 1.6s infinite linear;
+  border-radius: 6px;
+}
+
+/* Book card amber glow on hover */
+.book-card-wrap:hover {
+  box-shadow: 0 0 0 1px var(--amber), 0 8px 24px rgba(200, 129, 58, 0.15);
+}
+
+/* Smooth focus ring for all inputs */
+input:focus, select:focus, textarea:focus {
+  box-shadow: 0 0 0 2px var(--amber);
+}
+
+/* Page transitions */
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.slide-up { animation: slide-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
 /* Markdown inside chat bubbles */
 .prose-chat p            { margin: 0 0 0.6em; }
 .prose-chat p:last-child { margin-bottom: 0; }

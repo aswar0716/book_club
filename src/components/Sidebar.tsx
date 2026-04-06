@@ -2,21 +2,35 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
+
+interface Counts {
+  total: number;
+  reading: number;
+  wantToRead: number;
+  finished: number;
+  favourites: number;
+}
 
 const navItems = [
-  { href: "/",              label: "My Shelf",      icon: "📚" },
-  { href: "/library",       label: "Library",       icon: "🔎" },
-  { href: "/search",        label: "Find Books",    icon: "🔍" },
-  { href: "/reading",       label: "Reading Now",   icon: "☕" },
-  { href: "/want-to-read",  label: "Want to Read",  icon: "📌" },
-  { href: "/finished",      label: "Finished",      icon: "✓"  },
-  { href: "/favourites",    label: "Favourites",    icon: "♥"  },
-  { href: "/timeline",      label: "Timeline",      icon: "◎"  },
-  { href: "/stats",         label: "Stats",         icon: "◈"  },
-];
+  { href: "/",              label: "My Shelf",      icon: "📚", countKey: "total"      },
+  { href: "/library",       label: "Library",       icon: "🔎", countKey: null         },
+  { href: "/search",        label: "Find Books",    icon: "🔍", countKey: null         },
+  { href: "/reading",       label: "Reading Now",   icon: "☕", countKey: "reading"    },
+  { href: "/want-to-read",  label: "Want to Read",  icon: "📌", countKey: "wantToRead" },
+  { href: "/finished",      label: "Finished",      icon: "✓",  countKey: "finished"   },
+  { href: "/favourites",    label: "Favourites",    icon: "♥",  countKey: "favourites" },
+  { href: "/timeline",      label: "Timeline",      icon: "◎",  countKey: null         },
+  { href: "/stats",         label: "Stats",         icon: "◈",  countKey: null         },
+] as const;
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const [counts, setCounts] = useState<Counts | null>(null);
+
+  useEffect(() => {
+    fetch("/api/counts").then((r) => r.json()).then(setCounts).catch(() => {});
+  }, [pathname]); // refresh counts on every navigation
 
   return (
     <aside
@@ -40,9 +54,10 @@ export default function Sidebar() {
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 px-3 py-5 flex flex-col gap-1">
+      <nav className="flex-1 px-3 py-5 flex flex-col gap-0.5">
         {navItems.map((item) => {
           const active = pathname === item.href;
+          const count  = item.countKey && counts ? counts[item.countKey as keyof Counts] : null;
           return (
             <Link
               key={item.href}
@@ -55,8 +70,20 @@ export default function Sidebar() {
                 fontWeight: active ? "700" : "400",
               }}
             >
-              <span className="text-base">{item.icon}</span>
-              {item.label}
+              <span className="text-base w-5 text-center">{item.icon}</span>
+              <span className="flex-1">{item.label}</span>
+              {count !== null && count !== undefined && count > 0 && (
+                <span
+                  className="text-xs px-1.5 py-0.5 rounded-full min-w-[20px] text-center"
+                  style={{
+                    background: active ? "var(--amber)" : "var(--bg-elevated)",
+                    color:      active ? "var(--bg-deep)" : "var(--cream-faint)",
+                    fontSize: "10px",
+                  }}
+                >
+                  {count}
+                </span>
+              )}
             </Link>
           );
         })}

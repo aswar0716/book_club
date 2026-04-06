@@ -10,6 +10,8 @@ const navItems = [
   { href: "/want-to-read",  label: "Want to Read",  icon: "📌" },
   { href: "/finished",      label: "Finished",      icon: "✓"  },
   { href: "/favourites",    label: "Favourites",    icon: "♥"  },
+  { href: "/timeline",      label: "Timeline",      icon: "◎"  },
+  { href: "/stats",         label: "Stats",         icon: "◈"  },
 ];
 
 export default function Sidebar() {

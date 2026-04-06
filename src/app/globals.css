@@ -74,3 +74,17 @@ body {
 
 /* Star rating */
 .star { transition: color 0.15s; cursor: pointer; }
+
+/* Markdown inside chat bubbles */
+.prose-chat p            { margin: 0 0 0.6em; }
+.prose-chat p:last-child { margin-bottom: 0; }
+.prose-chat strong       { color: var(--amber-light); font-weight: 700; }
+.prose-chat em           { color: var(--cream-muted); font-style: italic; }
+.prose-chat ul           { margin: 0.4em 0 0.6em 1.2em; list-style: disc; }
+.prose-chat ol           { margin: 0.4em 0 0.6em 1.4em; list-style: decimal; }
+.prose-chat li           { margin-bottom: 0.2em; }
+.prose-chat h1,
+.prose-chat h2,
+.prose-chat h3           { font-family: var(--font-serif); color: var(--amber-light); margin: 0.5em 0 0.3em; }
+.prose-chat code         { background: var(--bg-deep); padding: 0.1em 0.35em; border-radius: 4px; font-size: 0.85em; }
+.prose-chat blockquote   { border-left: 2px solid var(--amber); padding-left: 0.75em; color: var(--cream-muted); margin: 0.5em 0; }

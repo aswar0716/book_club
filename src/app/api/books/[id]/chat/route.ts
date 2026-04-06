@@ -14,43 +14,85 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   });
   if (!book) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-  const pageContext = currentPage && currentPage > 0
-    ? `The reader is currently on page ${currentPage}${book.pageCount ? ` of ${book.pageCount}` : ""}. Only discuss content up to this point — do not spoil anything beyond page ${currentPage}.`
-    : `The reader has not specified their current page. Be thoughtful about spoilers and ask if needed.`;
+  // Rich context about the reader's relationship with this book
+  const readerContext = [
+    book.rating    ? `The reader has rated this book ${book.rating}/5 stars.` : null,
+    book.notes?.trim() ? `The reader's personal notes on this book: "${book.notes.trim()}"` : null,
+    currentPage && currentPage > 0
+      ? `The reader is currently on page ${currentPage}${book.pageCount ? ` of ${book.pageCount}` : ""}. Only discuss content up to this point — never spoil anything beyond page ${currentPage}.`
+      : "The reader has not specified their current page. Be thoughtful about potential spoilers and check with them if needed.",
+  ].filter(Boolean).join("\n");
 
-  const systemPrompt = `You are a warm, thoughtful book club companion — like a well-read friend sitting across from them by the fireplace with a cup of tea. You are discussing "${book.title}" by ${book.author}.
+  const systemPrompt = `You are a warm, thoughtful book club companion — like a well-read friend sitting by the fireplace with a cup of tea. You are discussing "${book.title}" by ${book.author}${book.publishYear ? ` (${book.publishYear})` : ""}.
 
-${pageContext}
+${readerContext}
 
-Keep your tone conversational, curious, and cosy. Share insights about themes, characters, writing style, and historical context. Ask follow-up questions to keep the conversation alive. Never be dry or academic — be the kind of reader who genuinely loves books and loves talking about them.
+Your personality: conversational, genuinely curious, cosy. You love books and love talking about them. You share insights about themes, characters, writing style, and historical or literary context. You ask follow-up questions to keep the conversation alive. You never lecture — you discuss.
 
-If the reader shares personal reactions, engage with those first before offering your own analysis.`;
+When the reader shares a personal reaction or feeling, engage with that first before offering analysis. Keep responses focused and readable — avoid walls of text. Use natural paragraph breaks.`;
 
-  // Save user message
+  // Save user message first
   await db.chatMessage.create({
     data: { bookId: id, role: "user", content: message, pageContext: currentPage ?? null },
   });
 
-  // Build message history for Claude
-  const history = book.chatMessages.map((m) => ({
+  // Build conversation history for Claude
+  const history = book.chatMessages.map((m: { role: string; content: string }) => ({
     role: m.role as "user" | "assistant",
     content: m.content,
   }));
   history.push({ role: "user", content: message });
 
-  const response = await client.messages.create({
-    model: "claude-opus-4-6",
-    max_tokens: 1024,
-    system: systemPrompt,
-    messages: history,
+  // Stream response using Web Streams API (as per Next.js Route Handler docs)
+  const encoder = new TextEncoder();
+  let fullReply = "";
+
+  const stream = new ReadableStream({
+    async start(controller) {
+      try {
+        const anthropicStream = client.messages.stream({
+          model: "claude-opus-4-6",
+          max_tokens: 1024,
+          system: systemPrompt,
+          messages: history,
+        });
+
+        for await (const chunk of anthropicStream) {
+          if (
+            chunk.type === "content_block_delta" &&
+            chunk.delta.type === "text_delta"
+          ) {
+            const text = chunk.delta.text;
+            fullReply += text;
+            controller.enqueue(encoder.encode(text));
+          }
+        }
+
+        // Persist the complete reply once streaming is done
+        await db.chatMessage.create({
+          data: {
+            bookId: id,
+            role: "assistant",
+            content: fullReply,
+            pageContext: currentPage ?? null,
+          },
+        });
+      } finally {
+        controller.close();
+      }
+    },
   });
 
-  const reply = (response.content[0] as { type: string; text: string }).text;
-
-  // Save assistant reply
-  await db.chatMessage.create({
-    data: { bookId: id, role: "assistant", content: reply, pageContext: currentPage ?? null },
+  return new Response(stream, {
+    headers: {
+      "Content-Type": "text/plain; charset=utf-8",
+      "X-Content-Type-Options": "nosniff",
+    },
   });
+}
 
-  return NextResponse.json({ reply });
+export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  await db.chatMessage.deleteMany({ where: { bookId: id } });
+  return NextResponse.json({ ok: true });
 }

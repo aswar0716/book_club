@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import ReactMarkdown from "react-markdown";
 import { BookModel } from "@/generated/prisma/models/Book";
 import { ChatMessageModel } from "@/generated/prisma/models/ChatMessage";
 
@@ -9,6 +10,13 @@ interface Props {
   book: BookModel;
   genres: string[];
   chatMessages: ChatMessageModel[];
+}
+
+interface ChatMsg {
+  role: string;
+  content: string;
+  pageContext?: number | null;
+  createdAt?: Date | string;
 }
 
 const statusOptions = [
@@ -29,9 +37,9 @@ export default function BookActions({ book, chatMessages }: Props) {
   const [saved,       setSaved]       = useState(false);
 
   // Chat
-  const [messages,    setMessages]    = useState<{ role: string; content: string }[]>(chatMessages);
+  const [messages,    setMessages]    = useState<ChatMsg[]>(chatMessages);
   const [input,       setInput]       = useState("");
-  const [chatLoading, setChatLoading] = useState(false);
+  const [streaming,   setStreaming]   = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -61,21 +69,47 @@ export default function BookActions({ book, chatMessages }: Props) {
     router.push("/");
   }
 
+  async function handleClearChat() {
+    if (!confirm("Clear this conversation? This can't be undone.")) return;
+    await fetch(`/api/books/${book.id}/chat`, { method: "DELETE" });
+    setMessages([]);
+  }
+
   async function sendMessage() {
-    if (!input.trim() || chatLoading) return;
-    const userMsg = { role: "user", content: input };
+    if (!input.trim() || streaming) return;
+
+    const userMsg: ChatMsg = { role: "user", content: input, pageContext: currentPage || null };
     setMessages((prev) => [...prev, userMsg]);
     setInput("");
-    setChatLoading(true);
+    setStreaming(true);
+
+    // Add an empty assistant message that we'll fill as tokens arrive
+    setMessages((prev) => [...prev, { role: "assistant", content: "" }]);
 
     const res = await fetch(`/api/books/${book.id}/chat`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message: input, currentPage }),
+      body: JSON.stringify({ message: userMsg.content, currentPage }),
     });
-    const data = await res.json();
-    setMessages((prev) => [...prev, { role: "assistant", content: data.reply }]);
-    setChatLoading(false);
+
+    if (!res.body) { setStreaming(false); return; }
+
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      const chunk = decoder.decode(value, { stream: true });
+      setMessages((prev) => {
+        const updated = [...prev];
+        const last = updated[updated.length - 1];
+        updated[updated.length - 1] = { ...last, content: last.content + chunk };
+        return updated;
+      });
+    }
+
+    setStreaming(false);
   }
 
   return (
@@ -200,7 +234,7 @@ export default function BookActions({ book, chatMessages }: Props) {
       >
         {/* Chat header */}
         <div
-          className="px-5 py-4"
+          className="px-5 py-3 flex items-center justify-between"
           style={{ borderBottom: "1px solid var(--border-light)", background: "var(--bg-elevated)" }}
         >
           <div className="flex items-center gap-2">
@@ -211,15 +245,24 @@ export default function BookActions({ book, chatMessages }: Props) {
               </h3>
               <p className="text-xs" style={{ color: "var(--text-muted)" }}>
                 {currentPage > 0
-                  ? `Discussing up to page ${currentPage} — no spoilers beyond this`
-                  : "Ask anything — set your page for spoiler-free chat"}
+                  ? `Up to page ${currentPage} — spoiler-free`
+                  : "Set your page for spoiler-free chat"}
               </p>
             </div>
           </div>
+          {messages.length > 0 && (
+            <button
+              onClick={handleClearChat}
+              className="text-xs px-3 py-1 rounded-lg transition-all"
+              style={{ color: "var(--text-muted)", border: "1px solid var(--border-light)" }}
+            >
+              Clear
+            </button>
+          )}
         </div>
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto px-5 py-4 flex flex-col gap-4" style={{ maxHeight: "380px" }}>
+        <div className="flex-1 overflow-y-auto px-5 py-4 flex flex-col gap-4" style={{ maxHeight: "400px" }}>
           {messages.length === 0 && (
             <div className="flex-1 flex flex-col items-center justify-center text-center py-8">
               <div className="text-3xl mb-3">☕</div>
@@ -232,9 +275,15 @@ export default function BookActions({ book, chatMessages }: Props) {
             </div>
           )}
           {messages.map((msg, i) => (
-            <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
+            <div key={i} className={`flex flex-col gap-1 ${msg.role === "user" ? "items-end" : "items-start"}`}>
+              {/* Page context badge */}
+              {msg.role === "user" && msg.pageContext && (
+                <span className="text-xs px-2 py-0.5 rounded-full" style={{ color: "var(--amber)", background: "var(--bg-deep)" }}>
+                  p.{msg.pageContext}
+                </span>
+              )}
               <div
-                className="max-w-[80%] px-4 py-2.5 rounded-xl text-sm leading-relaxed"
+                className="max-w-[85%] px-4 py-2.5 rounded-xl text-sm leading-relaxed"
                 style={{
                   background: msg.role === "user" ? "var(--amber)" : "var(--bg-elevated)",
                   color:      msg.role === "user" ? "var(--bg-deep)" : "var(--cream)",
@@ -242,11 +291,23 @@ export default function BookActions({ book, chatMessages }: Props) {
                   borderBottomLeftRadius:  msg.role === "user" ? "12px" : "4px",
                 }}
               >
-                {msg.content}
+                {msg.role === "assistant" ? (
+                  <div className="prose-chat">
+                    <ReactMarkdown>{msg.content || " "}</ReactMarkdown>
+                  </div>
+                ) : (
+                  msg.content
+                )}
               </div>
+              {/* Timestamp */}
+              {msg.createdAt && (
+                <span className="text-xs" style={{ color: "var(--cream-faint)" }}>
+                  {new Date(msg.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                </span>
+              )}
             </div>
           ))}
-          {chatLoading && (
+          {streaming && messages[messages.length - 1]?.content === "" && (
             <div className="flex justify-start">
               <div
                 className="px-4 py-2.5 rounded-xl text-sm"
@@ -279,15 +340,15 @@ export default function BookActions({ book, chatMessages }: Props) {
           />
           <button
             onClick={sendMessage}
-            disabled={chatLoading || !input.trim()}
+            disabled={streaming || !input.trim()}
             className="px-4 py-2 rounded-lg text-sm font-semibold transition-all"
             style={{
-              background: chatLoading || !input.trim() ? "var(--bg-card)" : "var(--amber)",
-              color:      chatLoading || !input.trim() ? "var(--text-muted)" : "var(--bg-deep)",
+              background: streaming || !input.trim() ? "var(--bg-card)" : "var(--amber)",
+              color:      streaming || !input.trim() ? "var(--text-muted)" : "var(--bg-deep)",
               border: "1px solid var(--border)",
             }}
           >
-            Send
+            {streaming ? "..." : "Send"}
           </button>
         </div>
       </div>

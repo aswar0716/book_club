@@ -1,11 +1,20 @@
 import { db } from "@/lib/db";
 import { BookModel } from "@/generated/prisma/models/Book";
 import Link from "next/link";
+import ReadingGoal from "@/components/ReadingGoal";
 
 export default async function StatsPage() {
-  const books = await db.book.findMany({ orderBy: { addedAt: "desc" } });
+  const thisYear = new Date().getFullYear();
+  const [books, goal] = await Promise.all([
+    db.book.findMany({ orderBy: { addedAt: "desc" } }),
+    db.readingGoal.findUnique({ where: { year: thisYear } }),
+  ]);
   const finished = books.filter((b: BookModel) => b.status === "finished");
   const reading  = books.filter((b: BookModel) => b.status === "reading");
+  const finishedThisYear = finished.filter((b: BookModel) => {
+    const yr = b.finishedAt ? new Date(b.finishedAt).getFullYear() : new Date(b.addedAt).getFullYear();
+    return yr === thisYear;
+  });
 
   if (books.length === 0) {
     return (
@@ -72,6 +81,9 @@ export default async function StatsPage() {
       <p className="mb-10" style={{ color: "var(--text-muted)" }}>
         A look at your reading life
       </p>
+
+      {/* Reading goal */}
+      <ReadingGoal year={thisYear} finished={finishedThisYear.length} initialTarget={goal?.target ?? null} />
 
       {/* Hero numbers */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-10">

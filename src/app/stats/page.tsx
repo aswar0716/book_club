@@ -78,9 +78,16 @@ export default async function StatsPage() {
       <h2 className="text-4xl mb-2" style={{ fontFamily: "var(--font-serif)", color: "var(--cream)" }}>
         Your Stats
       </h2>
-      <p className="mb-10" style={{ color: "var(--text-muted)" }}>
-        A look at your reading life
-      </p>
+      <div className="flex items-center justify-between mb-10">
+        <p style={{ color: "var(--text-muted)" }}>A look at your reading life</p>
+        <Link
+          href={`/year/${thisYear}`}
+          className="text-sm px-4 py-2 rounded-lg transition-all"
+          style={{ background: "var(--bg-card)", color: "var(--amber-light)", border: "1px solid var(--border-light)" }}
+        >
+          {thisYear} in Review →
+        </Link>
+      </div>
 
       {/* Reading goal */}
       <ReadingGoal year={thisYear} finished={finishedThisYear.length} initialTarget={goal?.target ?? null} />

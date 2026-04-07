@@ -20,6 +20,7 @@ const navItems = [
   { href: "/want-to-read",  label: "Want to Read",  icon: "📌", countKey: "wantToRead" },
   { href: "/finished",      label: "Finished",      icon: "✓",  countKey: "finished"   },
   { href: "/favourites",    label: "Favourites",    icon: "♥",  countKey: "favourites" },
+  { href: "/quotes",        label: "Quotes",        icon: "❝",  countKey: null         },
   { href: "/timeline",      label: "Timeline",      icon: "◎",  countKey: null         },
   { href: "/stats",         label: "Stats",         icon: "◈",  countKey: null         },
 ] as const;

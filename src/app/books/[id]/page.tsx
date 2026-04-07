@@ -2,12 +2,16 @@ import { db } from "@/lib/db";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import BookActions from "@/components/BookActions";
+import QuotePanel from "@/components/QuotePanel";
 
 export default async function BookPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const book = await db.book.findUnique({
     where: { id },
-    include: { chatMessages: { orderBy: { createdAt: "asc" } } },
+    include: {
+      chatMessages: { orderBy: { createdAt: "asc" } },
+      quotes:       { orderBy: { createdAt: "asc" } },
+    },
   });
   if (!book) notFound();
 
@@ -78,8 +82,11 @@ export default async function BookPage({ params }: { params: Promise<{ id: strin
         </div>
       </div>
 
-      {/* Interactive section */}
+      {/* Rating, notes, status, chat */}
       <BookActions book={book} genres={genres} chatMessages={book.chatMessages} />
+
+      {/* Quotes */}
+      <QuotePanel bookId={book.id} initialQuotes={book.quotes} />
     </div>
   );
 }

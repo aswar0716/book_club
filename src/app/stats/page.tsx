@@ -80,13 +80,23 @@ export default async function StatsPage() {
       </h2>
       <div className="flex items-center justify-between mb-10">
         <p style={{ color: "var(--text-muted)" }}>A look at your reading life</p>
-        <Link
-          href={`/year/${thisYear}`}
-          className="text-sm px-4 py-2 rounded-lg transition-all"
-          style={{ background: "var(--bg-card)", color: "var(--amber-light)", border: "1px solid var(--border-light)" }}
-        >
-          {thisYear} in Review →
-        </Link>
+        <div className="flex gap-2">
+          <a
+            href="/api/export"
+            download
+            className="text-sm px-4 py-2 rounded-lg transition-all"
+            style={{ background: "var(--bg-card)", color: "var(--text-muted)", border: "1px solid var(--border-light)" }}
+          >
+            Export CSV
+          </a>
+          <Link
+            href={`/year/${thisYear}`}
+            className="text-sm px-4 py-2 rounded-lg transition-all"
+            style={{ background: "var(--bg-card)", color: "var(--amber-light)", border: "1px solid var(--border-light)" }}
+          >
+            {thisYear} in Review →
+          </Link>
+        </div>
       </div>
 
       {/* Reading goal */}

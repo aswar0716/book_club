@@ -1,5 +1,6 @@
 import { db } from "@/lib/db";
 import GenreFilter from "@/components/GenreFilter";
+import RandomPick from "@/components/RandomPick";
 import { BookModel } from "@/generated/prisma/models/Book";
 import Link from "next/link";
 
@@ -20,7 +21,7 @@ export default async function WantToReadPage() {
       <h2 className="text-4xl mb-2" style={{ fontFamily: "var(--font-serif)", color: "var(--cream)" }}>
         Want to Read
       </h2>
-      <p className="mb-10" style={{ color: "var(--text-muted)" }}>
+      <p className="mb-8" style={{ color: "var(--text-muted)" }}>
         {books.length === 0
           ? "Your reading list is empty."
           : `${books.length} book${books.length !== 1 ? "s" : ""} waiting for you`}
@@ -37,7 +38,10 @@ export default async function WantToReadPage() {
           </Link>
         </div>
       ) : (
-        <GenreFilter books={books} allGenres={allGenres} />
+        <>
+          <RandomPick books={books as BookModel[]} />
+          <GenreFilter books={books} allGenres={allGenres} />
+        </>
       )}
     </div>
   );

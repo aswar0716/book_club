@@ -1,10 +1,19 @@
 import { db } from "@/lib/db";
 import { BookModel } from "@/generated/prisma/models/Book";
 import GenreFilter from "@/components/GenreFilter";
+import DailyQuote from "@/components/DailyQuote";
 import Link from "next/link";
 
 export default async function ShelfPage() {
-  const books = await db.book.findMany({ orderBy: { addedAt: "desc" } });
+  const [books, allQuotes] = await Promise.all([
+    db.book.findMany({ orderBy: { addedAt: "desc" } }),
+    db.quote.findMany({ include: { book: true } }),
+  ]);
+
+  // Pick a random quote each render
+  const randomQuote = allQuotes.length > 0
+    ? allQuotes[Math.floor(Math.random() * allQuotes.length)]
+    : null;
 
   const reading  = books.filter((b: BookModel) => b.status === "reading");
   const wantTo   = books.filter((b: BookModel) => b.status === "want_to_read");
@@ -42,6 +51,9 @@ export default async function ShelfPage() {
           <p style={{ color: "var(--text-muted)" }}>Your shelf is empty — find your first book to get started.</p>
         )}
       </div>
+
+      {/* Random quote from your reading */}
+      {randomQuote && <DailyQuote quote={randomQuote} />}
 
       {books.length === 0 && (
         <div
